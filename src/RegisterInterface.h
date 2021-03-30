@@ -31,6 +31,15 @@
 namespace Perilib
 {
 
+ 
+// This class serves two purposes:
+//    - it defines the abstract interface to read and write I2C regiesters that must be implemented 
+//      in the hardware-specific layer
+//    - it provides a number of convenience functions used to access I2C registers
+//
+// The convenience functions allow for reading of data of various sizes and byte orders from registers defined 
+// by addresses of various sizes and byte orders.
+
 class RegisterInterface
 {
 public:
@@ -92,8 +101,21 @@ public:
     uint16_t writeBuf_reg16le (uint16_t regAddr, uint8_t *data, int16_t dataLength) { return write(regAddr,  2, data, dataLength); } /// Write arbitrary buffer using little-endian 16-bit register address
     uint16_t writeBuf_reg16be (uint16_t regAddr, uint8_t *data, int16_t dataLength) { return write(regAddr, -2, data, dataLength); } /// Write arbitrary buffer using    big-endian 16-bit register address
 
-    // fundamental read/write operations are pure virtual here since they must be implemented by a hardware-specific layer
+    // Fundamental read/write operations are pure virtual here since they must be implemented by a hardware-specific layer
+ 
+    // The "read" function supports positive or negative lengths.
+    // The regAddrSize that is negative means that the address will be sent in big-endian order, MSB-first.
+    // The dataLength that  is negative means that the data will be recorded in reverse order 
+    // (the first incoming byte will be placed in the last byte of the "data" array).
+    // When the array is a little-endian number, that means the first incoming byte ends up in MSB position.
     virtual uint16_t read(uint32_t  regAddr, int8_t regAddrSize, uint8_t *data, int16_t dataLength) = 0;
+ 
+
+    // The "write" function supports positive or negative lengths.
+    // The regAddrSize that is negative means that the address will be sent in big-endian order, MSB-first.
+    // The dataLength that  is negative means that the data will be written in reverse order 
+    // (the first byte sent out will be the last byte in the "data" array). When the array is a little-endian 
+    // number, that means the first incoming byte ends up in MSB position.
     virtual uint16_t write(uint32_t regAddr, int8_t regAddrSize, uint8_t *data, int16_t dataLength) = 0;
 
     // as a host/master-driven interface, continuous processing may not be required
